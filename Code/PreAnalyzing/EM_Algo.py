@@ -24,11 +24,12 @@ class EM_Algo_1D:
         self.weight = [1 / K] * K
         self.mu = mu_init  # list with K params
         self.sigma = sigma_init  # list with K params
-        # self.gamma_sum = self.mu_numerator = self.sigma_numerator = [0.5] * K
         self.X, self.weight, self.mu, self.sigma = map(np.asarray, (self.X, self.weight, self.mu, self.sigma))
         self.stop = stop_criteria
+        self.record_params = {'mu':[],
+                              'sigma':[],
+                              'weight':[]}
 
-        # self.sample_count = 0
 
     def E_Step(self, x):
         """
@@ -69,19 +70,23 @@ class EM_Algo_1D:
 
         # Update weight
         self.weight = expectation_sum / N
+        self.record_params['weight'] = self.record_params['weight'].append(self.weight)
         print(f'weight: {self.weight}')
 
         # Update sigma
         self.sigma = np.sqrt(sigma_numerator / expectation_sum)
+        self.record_params['sigma'] = self.record_params['sigma'].append(self.sigma)
         print(f'sigma:{self.sigma}')
 
         # Update mu
         mu_old = self.mu
         self.mu = mu_numerator / expectation_sum
+        self.record_params['mu'] = self.record_params['mu'].append(self.mu)
         print(f'mu:{self.mu}')
 
         # Update length
-        self.epsilon = max((abs(np.subtract(self.mu, mu_old))))
+        self.epsilon = max(abs(self.mu - mu_old)/mu_old)
+        # self.epsilon = max((abs(np.subtract(self.mu, mu_old))))
         print(f'Epsilon: {self.epsilon}')
 
     def fit(self, iterate_num):
