@@ -14,13 +14,17 @@ src = pd.read_csv('data/last_anonym_2017_vartime.csv', sep=';', index_col=0, par
 print(src)
 output_path = ('Output/plot/')
 
+# Drop out the dates that has consisten value, 70865.614814...
+src = src[~ ((src['l'].values < 70865.615) & (src['l'].values > 70865.614))]
+
+
 # Separate the load curve into weekdays and weekends
 load_data = src.loc[:, 'l']
 weekdays_load_data = load_data[load_data.index.weekday.isin([0, 1, 2, 3, 4])]
 weekdays_load_data_day_group = weekdays_load_data.groupby(weekdays_load_data.index.date, axis=0)
 weekdays_load_data_month_group = weekdays_load_data.groupby(weekdays_load_data.index.month, axis=0)
 
-# The exogenous variables can be separated into 2 groups
+# The exogenous variables can be separated into 3 groups
 group_1 = src.columns[1:19]
 group_2 = src.columns[19:44]
 group_3 = src.columns[44:]

@@ -12,7 +12,6 @@ dayahead_auction = pd.read_csv(data_path + 'auction.csv', index_col=0, parse_dat
 dayahead_price = pd.read_csv(data_path + 'dayahead.csv', index_col=0, parse_dates=True)
 spot_vwp = pd.read_csv(data_path + 'vwap.csv', index_col=0, parse_dates=True)
 
-spot_vwp.columns
 
 
 
