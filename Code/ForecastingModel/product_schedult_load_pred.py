@@ -1,6 +1,8 @@
 # coding: utf-8
 
 # ### Module imports
+import matplotlib as mpl
+mpl.use('TkAgg')
 import os
 import sys
 import datetime as dt
@@ -8,9 +10,10 @@ import time as t
 import numpy as np
 import pandas as pd
 from pandas import datetime
-import matplotlib as mpl
+from Code.ForecastingModel import models_calibration
+from Code.ForecastingModel import data_loading_updating
+from Code.ForecastingModel.LSTM_Params import *
 
-mpl.use('TkAgg')
 from tabulate import tabulate
 from keras import backend as K
 
@@ -21,51 +24,8 @@ module_path = os.path.abspath(os.path.join('../'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 print(module_path)
-from Code.ForecastingModel import models_calibration, data_loading_updating
 
 # Model category name used throughout the subsequent analysis
-model_cat_id = "schedule_pred_ungrouped_newexo_lag_10ts_"
-
-# Which features from the dataset should be loaded:
-features = ['all']
-# If group up the 2 product schedules
-group_up = False
-# If adding new exogenous variable
-new_exo = True
-# If shift exogenous variables back 2 hours, because those schedule are lagged
-exo_lag = True
-
-# LSTM Layer configuration
-# ========================
-# Stateful True or false
-layer_conf = [True, True, True]
-# Number of neurons per layer
-cells = [[20, 50, 100, 150, 200], [10, 20, 50], [10, 20, 50]]
-# Regularization per layer
-dropout = [0, 0.1, 0.2]
-# Size of how many samples are used for one forward/backward pass
-batch_size = [5, 10, 15, 20]
-# timesteps indicates how many subsamples you want to input in one training sample
-timesteps = [96 * 10]  # 1 days sample to train
-# forecasting_length indicates how many steps you want to forecast in the future
-forecast_length = 96
-# forecasting scheme
-forecast_scheme = 'quarterly2quarterly'
-
-# Early stopping parameters
-early_stopping = True
-min_delta = 0.006
-patience = 2
-
-# Splitdate for train and test data.
-split_date = dt.datetime(2017, 11, 1, 0, 0, 0, 0)
-
-# Validation split percentage
-validation_split = 0.2
-# How many epochs in total
-epochs = 30
-# Set verbosity level. 0 for only per model, 1 for progress bar...
-verbose = 1
 
 # ## Overall configuration
 # These parameters are later used, but shouldn't have to change between different model categories (model 1-5)
@@ -91,9 +51,9 @@ results = pd.DataFrame(columns=['model_name', 'config', 'dropout',
 
 # Generate output folders and files
 code_path = os.getcwd()
-res_dir = code_path + '/' + model_cat_id + forecast_scheme + '/Model_Output/results/'
-plot_dir = code_path + '/' + model_cat_id + forecast_scheme + '/Model_Output/plots/'
-model_dir = code_path + '/' + model_cat_id + forecast_scheme + '/Model_Output/models/'
+res_dir = code_path + '/Output/LSTM/' + model_cat_id + forecast_scheme + '/Model_Output/results/'
+plot_dir = code_path + '/Output/LSTM/' + model_cat_id + forecast_scheme + '/Model_Output/plots/'
+model_dir = code_path + '/Output/LSTM/' + model_cat_id + forecast_scheme + '/Model_Output/models/'
 os.makedirs(res_dir, exist_ok=True)
 os.makedirs(model_dir, exist_ok=True)
 os.makedirs(plot_dir, exist_ok=True)

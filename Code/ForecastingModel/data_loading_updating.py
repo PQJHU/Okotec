@@ -1,14 +1,16 @@
+import matplotlib as mpl
+mpl.use('TKAgg')
 import datetime
 import numpy as np
 import pandas as pd
 from datetime import date
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import pytz
-from Code import entsoe, weather
+# from Code import entsoe, weather
 import json
 from scipy.special import logit
-import matplotlib.pyplot as plt
 import statsmodels.tsa.api as smt
+import matplotlib.pyplot as plt
 
 
 def shift_load_data(df, shift_interval=None):
@@ -154,22 +156,25 @@ def load_dataset(path=None, modules=None, forecasting_interval=7, split_date=Non
                                       forecasting_interval=forecasting_interval,
                                       forecast_scheme=forecast_scheme,
                                       grouped_up=grouped_up,
-                                      transform=transform)
+                                      transform=transform,
+                                      new_exo=new_exo)
     X_test, y_test = reform_SL_data(df=df_test,
                                     modules=modules,
                                     forecasting_interval=forecasting_interval,
                                     forecast_scheme=forecast_scheme,
                                     grouped_up=grouped_up,
-                                    transform=transform)
+                                    transform=transform,
+                                    new_exo=new_exo)
 
     return X_train, y_train, X_test, y_test, y_scaler
 
 
 def reform_SL_data(df, modules=None, forecasting_interval=7, forecast_scheme=None, grouped_up=False,
-                   transform='standard'):
+                   transform='standard', new_exo = False):
     indicator_vars = {'all': df.columns[0:],
                       'group_1': df.columns[1:19].append(df.columns[43:73]),
-                      'group_2': df.columns[19:43],
+                      'group_2': df.columns[19:44],
+                      'group_3': df.columns[44:73],
                       'group_new_exo': df.columns[73:]
                       }
 
@@ -185,12 +190,18 @@ def reform_SL_data(df, modules=None, forecasting_interval=7, forecast_scheme=Non
 
         group_2 = df[indicator_vars['group_2']].sum(axis=1)
         group_2.name = 'group_2'
+
+        group_3 = df[indicator_vars['group_3']].sum(axis=1)
+        group_3.name = 'group_3'
         # df_exogenous = pd.concat([df_exogenous, group_2], axis=1)
 
-        group_new_exo = df[indicator_vars['group_new_exo']].sum(axis=1)
-        group_new_exo.name = 'new_exo'
+        if new_exo:
+            group_new_exo = df[indicator_vars['group_new_exo']].sum(axis=1)
+            group_new_exo.name = 'new_exo'
+            df_exogenous = pd.concat([df_exogenous, group_1, group_2, group_3, group_new_exo], axis=1)
+        else:
+            df_exogenous = pd.concat([df_exogenous, group_1, group_2, group_3], axis=1)
 
-        df_exogenous = pd.concat([df_exogenous, group_1, group_2, group_new_exo], axis=1)
     else:
         df_pred = df['l'].copy()
         df_exogenous = df.copy()

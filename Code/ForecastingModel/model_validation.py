@@ -1,10 +1,10 @@
+import matplotlib as mpl
+mpl.use('TkAgg')
 import os
 import sys
 import datetime as dt
 import pandas as pd
 import numpy as np
-import matplotlib as mpl
-mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 from keras import backend as K
 from keras.models import load_model
@@ -20,9 +20,9 @@ from Code.ForecastingModel import models_calibration, data_loading_updating
 # ========================
 # Configure the parameters
 # ========================
-model_cat_id = "schedule_pred_ungrouped_newexo_lag"
+model_cat_id = "schedule_pred_ungrouped_lag"
 features = ['all']  # Which features from the dataset should be loaded:
-group_up = False  # If group up the 2 product schedules
+group_up = True  # If group up the 3 product schedules
 # LSTM Layer configuration
 # Size of how many samples are used for one forward/backward pass
 batch_size = [5, 10, 15, 20]
@@ -33,10 +33,10 @@ forecast_length = 96
 # forecasting scheme
 forecast_scheme = 'quarterly2quarterly'
 # If adding new exogenous variable
-new_exo = True
+new_exo = False
 mpl.rcParams['figure.figsize'] = (9, 5)
 # If shift exogenous variables back 2 hours, because those schedule are lagged
-exo_lag = True
+exo_lag = False
 
 
 # ========================
@@ -296,7 +296,7 @@ niqrRMSE 1.1684926552124
                }]
     test_results = test_results.append(result, ignore_index=True)
 
-    graph = True
+    graph = False
     if graph:
         plt.figure(figsize=(12, 5))
         plt.plot(actual_raw, color='black', linewidth=0.5)

@@ -27,7 +27,7 @@ weekdays_load_data_month_group = weekdays_load_data.groupby(weekdays_load_data.i
 # The exogenous variables can be separated into 3 groups
 group_1 = src.columns[1:19]
 group_2 = src.columns[19:44]
-group_3 = src.columns[44:]
+group_3 = src.columns[44:73]
 
 src_group_1_sum = src.loc[:, group_1].sum(axis=1)
 src_group_2_sum = src.loc[:, group_2].sum(axis=1)

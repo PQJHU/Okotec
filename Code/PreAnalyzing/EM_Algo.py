@@ -1,8 +1,7 @@
 import numpy as np
-import sklearn
 import matplotlib as mpl
+
 mpl.use("TkAgg")
-import matplotlib.pyplot as plt
 from scipy.stats import norm
 
 
@@ -12,13 +11,9 @@ def uni_normal(x, mu, sigma):
                     mu, sigma))
 
 
-# mu_init = 63800
-# sigma_init = 22500
-
-
 class EM_Algo_1D:
 
-    def __init__(self, X, K, mu_init, sigma_init, stop_criteria):
+    def __init__(self, X=None, K=6, mu_init=None, sigma_init=None, stop_criteria=None):
         self.X = X
         self.K = K
         self.weight = [1 / K] * K
@@ -26,10 +21,9 @@ class EM_Algo_1D:
         self.sigma = sigma_init  # list with K params
         self.X, self.weight, self.mu, self.sigma = map(np.asarray, (self.X, self.weight, self.mu, self.sigma))
         self.stop = stop_criteria
-        self.record_params = {'mu':[],
-                              'sigma':[],
-                              'weight':[]}
-
+        self.record_params = {'mu': [],
+                              'sigma': [],
+                              'weight': []}
 
     def E_Step(self, x):
         """
@@ -42,6 +36,7 @@ class EM_Algo_1D:
         # print(f'pdf_weight:{pdf_weighted}')
         # print(f'expectation:{self.expectation}')
         # print(type(self.expectation))
+        return self.expectation
 
     def M_Step(self):
         """
@@ -70,22 +65,22 @@ class EM_Algo_1D:
 
         # Update weight
         self.weight = expectation_sum / N
-        self.record_params['weight'] = self.record_params['weight'].append(self.weight)
+        self.record_params['weight'].append(self.weight)
         print(f'weight: {self.weight}')
 
         # Update sigma
         self.sigma = np.sqrt(sigma_numerator / expectation_sum)
-        self.record_params['sigma'] = self.record_params['sigma'].append(self.sigma)
+        self.record_params['sigma'].append(self.sigma)
         print(f'sigma:{self.sigma}')
 
         # Update mu
         mu_old = self.mu
         self.mu = mu_numerator / expectation_sum
-        self.record_params['mu'] = self.record_params['mu'].append(self.mu)
+        self.record_params['mu'].append(self.mu)
         print(f'mu:{self.mu}')
 
         # Update length
-        self.epsilon = max(abs(self.mu - mu_old)/mu_old)
+        self.epsilon = max(abs(self.mu - mu_old) / mu_old)
         # self.epsilon = max((abs(np.subtract(self.mu, mu_old))))
         print(f'Epsilon: {self.epsilon}')
 
