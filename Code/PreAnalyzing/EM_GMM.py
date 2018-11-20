@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 """
 Clustering Analysis using E-M algorithm
 """
@@ -16,7 +17,7 @@ import statsmodels.tsa.api as smt
 src = pd.read_csv('data/last_anonym_2017_vartime.csv', sep=';', index_col=0, parse_dates=True)
 outdata_path = ('Output/Data/')
 outplot_path = ('Output/plot/')
-
+print(outdata_path)
 # Drop out the dates that has consisten value, 70865.614814...
 src_new = src[~ ((src['l'].values < 70865.615) & (src['l'].values > 70865.614))]
 
@@ -201,6 +202,7 @@ else:
                     'sigma': em_loadcurve.sigma,
                     'mu': em_loadcurve.mu
                     }
+
 """
 weight:
 [13990.10615243, 69775.30988833, 54418.63202583, 77427.65304675,
@@ -209,7 +211,7 @@ weight:
 sigma:
 [3439.86652517, 1943.68563104, 3482.01753793, 1892.98292721,
        2828.60859839]
-       
+
 mu:
 [13990.10615243, 69775.30988833, 54418.63202583, 77427.65304675,
        29863.85491491]
@@ -219,55 +221,115 @@ mu:
 
 em_optimal = EM_Algo_1D(K=cluster_num, mu_init=em_estimator['mu'], sigma_init=em_estimator['sigma'])
 
-load_values = gmm_df_4d['load'].values
+# ================= Read forecasting result and classify=================
+from Code.ForecastingModel.LSTM_Params import res_dir, fastec_dir
+best_prediction = pd.read_csv(res_dir + 'Best_model_forecaste_result.csv', index_col=0, parse_dates=True)
+# fastec_prediction = pd.read_csv(fastec_dir + 'actual_forecast.csv', index_col=0, parse_dates=True)
+
+load_forecast_values = best_prediction['forecast_load'].values
 load_clusters = list()
 # load_value = Load_clustering.values[321]
 
-for num, load_value in enumerate(load_values):
-    load_cluster = list()
+for num, load_value in enumerate(load_forecast_values):
+    forecast_load_cluster = list()
     # load_cluster.append(num)
-    load_cluster.append(load_value)
+    forecast_load_cluster.append(load_value)
     print(num)
     print(load_value)
     prob_x = em_optimal.E_Step(load_value)
     dis_idx = np.where(prob_x == max(prob_x))[0][0]
-    load_cluster.append(dis_idx)
-    load_cluster.append(max(prob_x))
+    forecast_load_cluster.append(dis_idx)
+    forecast_load_cluster.append(max(prob_x))
+    forecast_load_cluster.extend(prob_x)
+    load_clusters.append(forecast_load_cluster)
 
-    load_clusters.append(load_cluster)
+cols = [f'prob_m{k}' for k in range(cluster_num)]
 
-load_clusters_df = pd.DataFrame(data=load_clusters, index=gmm_df_4d.index,
-                                columns=['load', 'cluster', 'probability'])
-load_clusters_df = pd.concat([load_clusters_df, gmm_df_4d.loc[:, ['schedule_1', 'schedule_2', 'schedule_3']]], axis=1)
+load_clusters_df = pd.DataFrame(data=load_clusters, index=best_prediction.index,
+                                columns=['forecast_load', 'cluster', 'max_prob'] + cols)
 
-load_clusters_df['cluster'].value_counts()
-load_clusters_df['probability'].describe()
-plt.hist(load_clusters_df['probability'], bins=1000)
+load_clusters_df = pd.concat([load_clusters_df, gmm_df_4d.loc[:, ['load']]], axis=1)
+load_clusters_df.dropna(axis=0, inplace=True)
 
-subtracted_load = list(map(lambda load, cls_num: load - em_estimator['mu'][cls_num],
-                           load_clusters_df['load'].values, load_clusters_df['cluster'].values))
+# load_clusters_df['cluster'].value_counts()
+# load_clusters_df['probability'].describe()
+#
+plt.hist(load_clusters_df['max_prob'], bins=1000)
+# plt.hist(gmm_df_4d['load'], bins=1000)
 
-load_clusters_df['cluster_mean'] = list(
-    map(lambda cls_num: em_estimator['mu'][cls_num], load_clusters_df['cluster'].values))
-load_clusters_df['subtracted_load'] = subtracted_load
+weighted_cluster_load = pd.DataFrame()
+for k in range(cluster_num):
+    weighted_k = load_clusters_df[f'prob_m{k}']*em_estimator['mu'][k]
+    if k ==0:
+        weighted_cluster_load = weighted_k
+    else:
+        weighted_cluster_load += weighted_k
+
+load_clusters_df['weighted_cluster_load'] = weighted_cluster_load
+load_clusters_df.drop(labels=cols, inplace=True, axis=1)
+
+# subtracted_load = list(map(lambda load, cls_num: load - em_estimator['mu'][int(cls_num)],
+#                            load_clusters_df['forecast_load'].values, load_clusters_df['cluster'].values))
+#
+load_clusters_df['cluster_mean'] = list(map(lambda cls_num: em_estimator['mu'][int(cls_num)], load_clusters_df['cluster'].values))
+load_clusters_df['cluster_sigma'] = list(map(lambda cls_num: em_estimator['sigma'][int(cls_num)], load_clusters_df['cluster'].values))
+# load_clusters_df['subtracted_load'] = subtracted_load
+load_clusters_df['cluster_error'] = load_clusters_df['load'] -load_clusters_df['cluster_mean']
+plt.plot(load_clusters_df['cluster_error'])
+load_clusters_df['forecast_error'] = load_clusters_df['load'] -load_clusters_df['forecast_load']
+plt.plot(load_clusters_df['forecast_error'])
 
 plt.figure(figsize=(15, 5))
+plt.subplot(2,1,1)
 plt.plot(load_clusters_df['load'])
+# plt.plot(load_clusters_df['forecast_load'])
 plt.plot(load_clusters_df['cluster_mean'])
-plt.plot(load_clusters_df['subtracted_load'])
+
+plt.subplot(2,1,2)
+plt.plot(load_clusters_df['load'])
+plt.plot(load_clusters_df['forecast_load'], 'g')
+plt.tight_layout()
+plt.savefig(outplot_path + 'load_forecast_cluster.png', dpi=300)
+
+# ====Forecast errors distribution
+plt.hist(load_clusters_df['forecast_error'], bins=500)
+
+
+# plt.plot(load_clusters_df['subtracted_load'])
+
+
+# =============Analyze typical forecasting structure
+# type 1:
+import datetime as dt
+sample_1 = load_clusters_df[load_clusters_df.index.date == dt.date(2017,10,3)]
+plt.figure(figsize=(15, 5))
+plt.plot(sample_1.loc[:, ['load']])
+plt.plot(sample_1.loc[:, ['forecast_load']])
+plt.plot(sample_1.loc[:, ['weighted_cluster_load']])
+
+
+
+
+
+
+
+
+
+
+
 
 # =================Analyze the exogenous variables for each cluster========
 
-cluster_1 = load_clusters_df[load_clusters_df['cluster'] == 1]
-
-plt.figure(figsize=(15,5))
-
-plt.hist(cluster_1['schedule_1'], bins=50)
-plt.hist(cluster_1['schedule_2'], bins=50)
-plt.hist(cluster_1['schedule_3'], bins=50)
-
-def plot_cluster_schedules(cluster_df):
-    pass
+# cluster_1 = load_clusters_df[load_clusters_df['cluster'] == 1]
+#
+# plt.figure(figsize=(15,5))
+#
+# plt.hist(cluster_1['schedule_1'], bins=50)
+# plt.hist(cluster_1['schedule_2'], bins=50)
+# plt.hist(cluster_1['schedule_3'], bins=50)
+#
+# def plot_cluster_schedules(cluster_df):
+#     pass
 
 
 # =================ACF and PACF of subtracted load curve
@@ -306,6 +368,6 @@ def plot_acf(y, lags=None, name=None):
     plt.savefig(name + '.pdf', dpi=300)
     plt.show()
 
-
-plot_acf(y=load_clusters_df['subtracted_load'], lags=1500)
-
+if_acf_plot = False
+if if_acf_plot:
+    plot_acf(y=load_clusters_df['subtracted_load'], lags=1500)

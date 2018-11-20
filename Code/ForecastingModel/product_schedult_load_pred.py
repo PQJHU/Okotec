@@ -2,6 +2,7 @@
 
 # ### Module imports
 import matplotlib as mpl
+
 mpl.use('TkAgg')
 import os
 import sys
@@ -17,7 +18,7 @@ from Code.ForecastingModel.LSTM_Params import *
 from tabulate import tabulate
 from keras import backend as K
 
-mpl.rcParams['figure.figsize'] = (9, 5)
+# mpl.rcParams['figure.figsize'] = (9, 5)
 
 # Import custom module functions
 module_path = os.path.abspath(os.path.join('../'))
@@ -48,18 +49,6 @@ results = pd.DataFrame(columns=['model_name', 'config', 'dropout',
 # ## Preparation and model generation
 # Necessary preliminary steps and then the generation of all possible models based on the settings at the top of this notebook.
 
-
-# Generate output folders and files
-code_path = os.getcwd()
-res_dir = code_path + '/Output/LSTM/' + model_cat_id + forecast_scheme + '/Model_Output/results/'
-plot_dir = code_path + '/Output/LSTM/' + model_cat_id + forecast_scheme + '/Model_Output/plots/'
-model_dir = code_path + '/Output/LSTM/' + model_cat_id + forecast_scheme + '/Model_Output/models/'
-os.makedirs(res_dir, exist_ok=True)
-os.makedirs(model_dir, exist_ok=True)
-os.makedirs(plot_dir, exist_ok=True)
-output_table = res_dir + 'results.csv'
-test_output_table = res_dir + 'test_results.csv'
-
 # Generate model combinations
 # models = []
 models = models_calibration.generate_combinations(
@@ -69,16 +58,17 @@ models = models_calibration.generate_combinations(
 # ## Loading the data:
 
 # Load data and prepare for standardization
-X_train, y_train, X_test, y_test, y_scaler = data_loading_updating.load_dataset(path=path,
-                                                                                modules=features,
-                                                                                forecasting_interval=int(
-                                                                                    timesteps[0] / 96),
-                                                                                split_date=split_date,
-                                                                                forecast_scheme=forecast_scheme,
-                                                                                grouped_up=group_up,
-                                                                                transform='0-1',
-                                                                                new_exo=new_exo,
-                                                                                exo_lag=exo_lag)
+X_train, y_train, time_frame_train, X_test, y_test, time_frame_test, y_scaler = data_loading_updating.load_dataset(
+    path=path,
+    modules=features,
+    forecasting_interval=int(
+        timesteps[0] / 96),
+    split_date=split_date,
+    forecast_scheme=forecast_scheme,
+    grouped_up=group_up,
+    transform='0-1',
+    new_exo=new_exo,
+    exo_lag=exo_lag)
 
 X_train = np.array(X_train)
 X_test = np.array(X_test)

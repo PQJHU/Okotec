@@ -1,4 +1,5 @@
 import datetime as dt
+import os
 
 model_cat_id = "forecasting_model_grouped_"
 
@@ -42,3 +43,15 @@ validation_split = 0.2
 epochs = 30
 # Set verbosity level. 0 for only per model, 1 for progress bar...
 verbose = 1
+
+code_path = os.getcwd()
+fastec_dir = code_path + '/Output/FASTEC/'
+res_dir = code_path + '/Output/LSTM/' + model_cat_id + forecast_scheme + '/Model_Output/results/'
+plot_dir = code_path + '/Output/LSTM/' + model_cat_id + forecast_scheme + '/Model_Output/plots/'
+model_dir = code_path + '/Output/LSTM/' + model_cat_id + forecast_scheme + '/Model_Output/models/'
+os.makedirs(res_dir, exist_ok=True)
+os.makedirs(model_dir, exist_ok=True)
+os.makedirs(plot_dir, exist_ok=True)
+output_table = res_dir + 'results.csv'
+test_output_table = res_dir + 'test_results.csv'
+
