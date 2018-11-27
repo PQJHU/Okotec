@@ -29,10 +29,8 @@ from tabulate import tabulate
 
 
 def generate_combinations(model_name=None, layer_conf=None, cells=None, dropout=None, batch_size=None, timesteps=None):
-    """ Generates from parameters all possible combinations
-    
-    ...
-    
+    """
+    Generates from parameters all possible combinations
     """
     # If also the dropout should have multiple settings per layer, recursion would be needed. But lets remain simple for now...
     # Creating the permutations (possible combinations) between the different configuration parameters
