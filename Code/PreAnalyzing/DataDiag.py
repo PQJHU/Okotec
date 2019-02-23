@@ -8,7 +8,6 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from scipy.special import logit
 import numpy as np
 
-
 print(os.getcwd())
 src = pd.read_csv('data/last_anonym_2017_vartime.csv', sep=';', index_col=0, parse_dates=True)
 print(src)
@@ -16,7 +15,6 @@ output_path = ('Output/plot/')
 
 # Drop out the dates that has consisten value, 70865.614814...
 src = src[~ ((src['l'].values < 70865.615) & (src['l'].values > 70865.614))]
-
 
 # Separate the load curve into weekdays and weekends
 load_data = src.loc[:, 'l']
@@ -32,26 +30,6 @@ group_3 = src.columns[44:73]
 src_group_1_sum = src.loc[:, group_1].sum(axis=1)
 src_group_2_sum = src.loc[:, group_2].sum(axis=1)
 src_group_3_sum = src.loc[:, group_3].sum(axis=1)
-
-
-def standard_scaler(df):
-    # Get all float type columns and standardize them
-    df = pd.DataFrame(df)
-    floats = [key for key in dict(df.dtypes) if dict(df.dtypes)[key] in ['float64']]
-    scaler = StandardScaler()
-    scaled_columns = scaler.fit_transform(df[floats])
-    df[floats] = scaled_columns
-    return df, scaler
-
-
-def min_max_scaler(df):
-    # Get all float type columns and standardize them
-    df = pd.DataFrame(df)
-    floats = [key for key in dict(df.dtypes) if dict(df.dtypes)[key] in ['float64']]
-    scaler = MinMaxScaler()
-    scaled_columns = scaler.fit_transform(df[floats])
-    df[floats] = scaled_columns
-    return df, scaler
 
 
 def numeric_bound(x):
@@ -114,42 +92,6 @@ def double_axs(time_index, data1, data2):
     fig.savefig(os.path.join(output_path, data2.name + '_load_daxis_.png'), format='png', dpi=200)
 
 
-def plot_acf_pacf(signal, lags=None, name=None):
-    plt.figure(figsize=(20, 5))
-    acf = plt.subplot(1, 2, 1)
-    smt.graphics.plot_acf(signal, lags=lags, ax=acf)
-    plt.xlabel('Time Lag', fontsize=16)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
-    pacf = plt.subplot(1, 2, 2)
-    smt.graphics.plot_pacf(signal, lags=lags, ax=pacf)
-    plt.xlabel('Time Lag', fontsize=16)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
-    plt.tight_layout()
-    plt.savefig(name + '.pdf', dpi=300)
-    plt.show()
-
-
-def plot_acf(y, lags=None, name=None):
-    plt.figure(figsize=(20, 5))
-    acf_all = plt.subplot(2, 1, 1)
-    smt.graphics.plot_acf(y, lags=None, ax=acf_all, unbiased=True)
-    plt.xticks(fontsize=17)
-    plt.yticks(fontsize=17)
-    plt.title('')
-    acf_lags = plt.subplot(2, 1, 2)
-    smt.graphics.plot_acf(y, lags=lags, ax=acf_lags, unbiased=True)
-    plt.xlabel('Time Lag', fontsize=18)
-    plt.xticks(fontsize=17)
-    plt.yticks(fontsize=17)
-    plt.title('')
-    plt.tight_layout()
-    plt.savefig(name + '.pdf', dpi=300)
-    plt.show()
-
-
-
 for col_name in src.columns:
     uni_col_data = src.loc[:, col_name]
     print(uni_col_data.describe())
@@ -192,15 +134,10 @@ days.sort()
 # t = days[-1]
 # t.weekday()
 
-# Plot ACF and PACF
-plt.figure(figsize=(15, 5))
-plot_acf(y=load_data, name=output_path + 'load_var_acf')
-plot_acf(y=load_data, lags=1000, name=output_path + 'load_var_acf_1000')
-
 
 # plot standardized time series
 load_data_sded = min_max_scaler(load_data)[0]
-plt.figure(figsize=(15,5))
+plt.figure(figsize=(15, 5))
 plt.plot(load_data_sded, color='b', alpha=0.7)
 plt.xlabel('Time', fontsize=18)
 plt.xticks(fontsize=17)
@@ -209,26 +146,25 @@ plt.tight_layout()
 plt.savefig(output_path + 'load_sd_ts.pdf', dpi=300)
 
 # plot exogenous variables in 3 groups
-plt.figure(figsize=(15,5))
-plt.subplot(3,1,1)
+plt.figure(figsize=(15, 5))
+plt.subplot(3, 1, 1)
 plt.plot(src.loc[:, group_1].values)
 plt.xticks([], [])
-plt.ylim([0,30])
+plt.ylim([0, 30])
 plt.yticks(fontsize=17)
-plt.subplot(3,1,2)
+plt.subplot(3, 1, 2)
 plt.plot(src.loc[:, group_2].values)
 plt.xticks([], [])
-plt.ylim([0,30])
+plt.ylim([0, 30])
 plt.yticks(fontsize=17)
-plt.subplot(3,1,3)
+plt.subplot(3, 1, 3)
 plt.plot(src.loc[:, group_3])
-plt.ylim([0,30])
+plt.ylim([0, 30])
 plt.yticks(fontsize=17)
 plt.xticks(fontsize=17)
 plt.xlabel('Time', fontsize=18)
 plt.tight_layout()
 plt.savefig(output_path + 'exogenous_var_ts_plot.pdf', dpi=300)
-
 
 # plot load curve and exogenous variable aggregated into weekly and monthly
 src_4_var = pd.concat([load_data, src_group_1_sum, src_group_2_sum, src_group_3_sum], axis=1)
@@ -240,7 +176,7 @@ src_4_var = min_max_scaler(src_4_var)[0]
 src_4_var['weekofyear'] = src_4_var.index.weekofyear
 src_4_var_weekofyeaer_agg = src_4_var.groupby(by='weekofyear', axis=0).mean()
 
-plt.figure(figsize=(15,5))
+plt.figure(figsize=(15, 5))
 plt.plot(src_4_var_weekofyeaer_agg['l'], color='b', alpha=1)
 plt.plot(src_4_var_weekofyeaer_agg[0], color='red', alpha=1)
 plt.plot(src_4_var_weekofyeaer_agg[1], color='green', alpha=1)
@@ -251,10 +187,3 @@ plt.yticks(fontsize=17)
 plt.xlabel('Week of the year', fontsize=18)
 plt.tight_layout()
 plt.savefig(output_path + 'weeklyagg_plot.pdf', dpi=300)
-
-
-# Stationary test
-
-from statsmodels.tsa.stattools import adfuller
-stationarity_load = adfuller(x=load_data)
-

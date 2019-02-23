@@ -18,29 +18,28 @@ module_path = os.path.abspath(os.path.join('../'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 print(module_path)
-from Code.ForecastingModel import CNF_ConfigurationModel, OPR_PreprocessAndLoad
-from Code.ForecastingModel.LSTM_Params import *
+from Code.NonLinear_ForecastModels import CNF_ConfigurationModel, OPR_PreprocessAndLoad
+from Code.NonLinear_ForecastModels.LSTM_Params import *
 
 # Load data and prepare for standardization
 # Split date for train and test data
 split_date = dt.datetime(2017, 1, 2, 0, 0, 0, 0)
 path = os.path.join(os.path.abspath(''), 'data/last_anonym_2017_vartime.csv')
+
+
+# Loading the data:
 X_train, y_train, time_frame_train, X_test, y_test, time_frame_test, y_scaler = OPR_PreprocessAndLoad.PreprocessingData(
-    file_path=path,
-    sample_perday=sample_perday,
+    file_path=file_path,
     lagged_days=lagged_days,
+    sample_perday=sample_perday,
     horizon=horizon,
     split_date=split_date,
     forecast_scheme=forecast_scheme,
     group_up=group_up,
-    transform='0-1',
+    transform=transform,
     new_exo=new_exo,
     exo_lag=exo_lag)
 
-X_train = np.array(X_train)
-X_test = np.array(X_test)
-y_train = np.array(y_train)
-y_test = np.array(y_test)
 
 
 def mean_absolute_percentage_error(y_true, y_pred):

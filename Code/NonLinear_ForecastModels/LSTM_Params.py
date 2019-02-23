@@ -1,5 +1,8 @@
 import datetime as dt
 import os
+import random
+
+random.seed(1124)
 
 # Data Preparation
 # ================
@@ -12,7 +15,6 @@ new_exo = False
 exo_lag = False
 # Method to transform data
 transform = '0-1'
-
 
 # LSTM Layer configuration
 # ========================
@@ -30,13 +32,13 @@ stateful = [True, True, True, True]
 # [neurons in layer1, neurons in layer2, neurons in layer3,...]
 # neurons = [[20, 50, 100, 150, 200], [20, 50, 100, 150, 200], [20, 50, 100, 150, 200], [20, 50, 100, 150, 200]]
 # neurons = [[150, 200], [150, 200], [150, 200],[150, 200]]
-neurons = [[1,3,5], [1,3,5, 10]]
+neurons = [[1, 3, 5], [1, 3, 5, 10]]
 
 # ！number of elements of neurons has to be the same as number of stateful
 
 # Regularization, a way to conqour overfitting
 # dropout = [0.1, 0.2, 0.3, 0.4, 0.5]
-dropout = [0.3]
+dropout = [0.1, 0.2, 0.3]
 
 # Define number of samples to fit model every time
 # batch_size = [20, 50, 80, 100, 120]
@@ -48,7 +50,7 @@ batch_sizes = [20, 50]
 lagged_days = 1
 
 # forecasting_length indicates how many steps you want to forecast in the future
-horizon = 2
+horizon = 1
 
 # forecasting scheme
 forecast_scheme = 'quarterly2quarterly'
@@ -71,13 +73,18 @@ epochs = 150
 verbose = 1
 
 # If log model fitting to tensorboard
-tensor_board=False
+tensor_board = True
+
+# Forecast results
 
 # Paths
+# Directory with dataset
+file_path = os.path.join(os.path.abspath(''), 'data/last_anonym_2017_vartime.csv')
+# path = os.path.join(os.path.abspath(''), 'Source/lstm_load_forecasting/data/fulldataset.csv')
 model_type = "Groupmodel"
 code_path = os.getcwd()
 fastec_dir = code_path + '/Output/FASTEC/'
-output_dir = code_path + '/Output/LSTM/' + forecast_scheme + '_' + model_type
+output_dir = code_path + '/Output/LSTM/' + forecast_scheme + '_' + model_type + f'_lag-{lagged_days}_h-{horizon}_tf-{transform}'
 res_dir = output_dir + '/results/'
 plot_dir = output_dir + '/plots/'
 model_dir = output_dir + '/models/'

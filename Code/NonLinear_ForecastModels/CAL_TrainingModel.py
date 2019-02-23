@@ -9,9 +9,9 @@ import time as t
 import numpy as np
 import pandas as pd
 from pandas import datetime
-from Code.ForecastingModel import CNF_ConfigurationModel
-from Code.ForecastingModel import OPR_PreprocessAndLoad
-from Code.ForecastingModel.LSTM_Params import *
+from Code.NonLinear_ForecastModels import CNF_ConfigurationModel
+from Code.NonLinear_ForecastModels import OPR_PreprocessAndLoad
+from Code.NonLinear_ForecastModels.LSTM_Params import *
 
 from tabulate import tabulate
 from keras import backend as K
@@ -22,25 +22,18 @@ from keras import backend as K
 
 
 class LSTM:
-
     """
     Calibrate LSTM model from given hyperparamteres
     """
 
     def __init__(self, model_name, hyperparams):
-
         self.model_name = model_name
 
         # Hyperparameters setting
         self.hyperparams = hyperparams
 
     def data_preprocessing(self):
-
         pass
-
-# Directory with dataset
-file_path = os.path.join(os.path.abspath(''), 'data/last_anonym_2017_vartime.csv')
-# path = os.path.join(os.path.abspath(''), 'Source/lstm_load_forecasting/data/fulldataset.csv')
 
 
 # Dataframe containing the relevant data from training of all models
@@ -75,56 +68,10 @@ X_train, y_train, time_frame_train, X_test, y_test, time_frame_test, y_scaler = 
     new_exo=new_exo,
     exo_lag=exo_lag)
 
-# ## Running through all generated models
-# Note: Depending on the above settings, this can take very long!
 
 
-# test for creating model
-# import keras.models as kmodel
-# import keras.layers as klayer
-# import keras.callbacks as kc
-#
-#
-# batch_size = [20]
-# N_batch = int(X_train.shape[0] / batch_size[0])
-#
-# X_train = X_train[0:N_batch * batch_size[0]]
-# y_train = y_train[0:N_batch * batch_size[0]]
-#
-# model = kmodel.Sequential()
-# model.add(klayer.LSTM(units=50,
-#                       input_shape=(lagged_days*sample_perday, 4),
-#                       batch_input_shape=(batch_size[0], lagged_days * sample_perday, 4),
-#                       return_sequences=True,
-#                       stateful=True
-#                       ))
-# model.add(klayer.LSTM(50, return_sequences=True, stateful=True))
-# model.add(klayer.LSTM(50, return_sequences=False, stateful=True))
-# model.add(klayer.Dropout(0.3))
-# model.add(klayer.Dense(horizon * sample_perday))
-#
-# model.compile(loss='mse', optimizer='adam', metrics=['mae'])
-#
-# early_stop = kc.EarlyStopping(monitor='loss',
-#                               min_delta=min_delta,
-#                               patience=4,
-#                               verbose=2,
-#                               mode='auto')
-#
-# history = model.fit(X_train, y_train,
-#                     epochs=50,
-#                     batch_size=batch_size[0],
-#                     validation_split=0.3,
-#                     verbose=2,
-#                     callbacks=[early_stop],
-#                     )
-#
-
-
-def model_training(model, X_train, y_train, ):
+def model_training(model, X_train, y_train):
     pass
-
-
 
 
 start_time = t.time()
@@ -135,35 +82,35 @@ for model_id, model_hyperparams in enumerate(models_hyperparams):
 
     stopper = t.time()
     print(f'========================= Model {model_id + 1}/{len(models_hyperparams)} =========================')
-    print(tabulate([['Starting with model', model_hyperparams['name']], ['Starting time', datetime.fromtimestamp(stopper)]],
-                   tablefmt="jira", numalign="right", floatfmt=".3f"))
+    print(tabulate(
+        [['Starting with model', model_hyperparams['name']], ['Starting time', datetime.fromtimestamp(stopper)]],
+        tablefmt="jira", numalign="right", floatfmt=".3f"))
 
     # Model training params
-    features = X_train.shape[2]
+    features = X_train.shape[2]  # Number of features
     loss = 'mse'
     optimizer = 'adam'
     metrics = ['mae']
 
+    print(tabulate([['Number of Features', features], ['Loss Function', loss], ['opttimizer', optimizer], ['metrics', metrics]],
+                   tablefmt='jira', numalign='right', floatfmt= '.2f'))
 
     try:
         # Creating the Keras Model
-        # In the training dataset, we have 240 samples, each sample with 7 sub-samples (last 7 days samples), and each
-        # sample has 72 features
+        model_lstm = CNF_ConfigurationModel.model_setting(model_hyperparams=model_hyperparams,
+                                                          features=features,
+                                                          loss=loss,
+                                                          optimizer=optimizer,
+                                                          horizon=horizon,
+                                                          sample_perday=sample_perday,
+                                                          cell_type=cell_type,
+                                                          metrics=metrics)
 
-        model = CNF_ConfigurationModel.model_setting(model_hyperparams=model_hyperparams,
-                                                     features=features,
-                                                     loss=loss,
-                                                     optimizer=optimizer,
-                                                     horizon=horizon,
-                                                     sample_perday=sample_perday,
-                                                     cell_type=cell_type,
-                                                     metrics=metrics)
-
-        model.summary()
+        print(model_lstm.summary())
 
         # Training...
-        history = CNF_ConfigurationModel.model_fitting(model=model,
-                                                       model_hyperparams =model_hyperparams,
+        history = CNF_ConfigurationModel.model_fitting(model=model_lstm,
+                                                       model_hyperparams=model_hyperparams,
                                                        y_train=y_train,
                                                        X_train=X_train,
                                                        batch_size=model_hyperparams['batch_size'],
@@ -191,7 +138,8 @@ for model_id, model_hyperparams in enumerate(models_hyperparams):
             print('______________________________________________________________________')
 
         result = [
-            {'model_name': model_hyperparams['name'], 'config': model_hyperparams, 'train_loss': history.history['loss'][min_idx], 'train_rmse': 0,
+            {'model_name': model_hyperparams['name'], 'config': model_hyperparams,
+             'train_loss': history.history['loss'][min_idx], 'train_rmse': 0,
              'train_mae': history.history['mean_absolute_error'][min_idx], 'train_mape': 0,
              'valid_loss': history.history['val_loss'][min_idx], 'valid_rmse': 0,
              'valid_mae': history.history['val_mean_absolute_error'][min_idx], 'valid_mape': 0,
@@ -203,7 +151,7 @@ for model_id, model_hyperparams in enumerate(models_hyperparams):
         results = results.append(result, ignore_index=True)
 
         # Saving the model and weights
-        model.save(model_dir + model_hyperparams['name'] + '.h5')
+        model_lstm.save(model_dir + model_hyperparams['name'] + '.h5')
 
         # Write results to csv
         results.to_csv(results_file, sep=';')
@@ -216,7 +164,8 @@ for model_id, model_hyperparams in enumerate(models_hyperparams):
     # Shouldn't catch all errors, but for now...
     except BaseException as e:
         print('=============== ERROR {}/{} ============='.format(model_id + 1, len(models_hyperparams)))
-        print(tabulate([['Model:', model_hyperparams['name']], ['Config:', model_hyperparams]], tablefmt="jira", numalign="right", floatfmt=".3f"))
+        print(tabulate([['Model:', model_hyperparams['name']], ['Config:', model_hyperparams]], tablefmt="jira",
+                       numalign="right", floatfmt=".3f"))
         print('Error: {}'.format(e))
         result = [{'model_name': model_hyperparams['name'], 'config': model_hyperparams, 'train_loss': str(e)}]
         results = results.append(result, ignore_index=True)

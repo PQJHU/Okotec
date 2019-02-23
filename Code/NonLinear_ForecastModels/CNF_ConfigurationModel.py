@@ -1,3 +1,8 @@
+"""
+Configurate hyperparameters for models
+
+"""
+
 # module imports
 import os
 import sys
@@ -22,7 +27,7 @@ import keras.callbacks as kc
 from keras.models import Sequential
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
-from Code.ForecastingModel.LSTM_Params import log_dir
+from Code.NonLinear_ForecastModels.LSTM_Params import log_dir
 from tabulate import tabulate
 
 
@@ -171,8 +176,8 @@ def model_setting(model_hyperparams, features, loss, optimizer, horizon, sample_
     return model
 
 
-def model_fitting(model, model_hyperparams, y_train, X_train, batch_size, epochs, verbose, validation_split, early_stopping,
-                  min_delta, patience, tensor_board):
+def model_fitting(model, model_hyperparams, y_train, X_train, batch_size, epochs, verbose, validation_split,
+                  early_stopping, min_delta, patience, tensor_board):
     """
 
     :param model:
@@ -199,10 +204,10 @@ def model_fitting(model, model_hyperparams, y_train, X_train, batch_size, epochs
     # Set early stopping (check if model has converged) callbacks
     if early_stopping:
         early_stop = kc.EarlyStopping(monitor='mae',
-                                                   min_delta=min_delta,
-                                                   patience=patience,
-                                                   verbose=verbose,
-                                                   mode='auto')
+                                      min_delta=min_delta,
+                                      patience=patience,
+                                      verbose=verbose,
+                                      mode='auto')
     else:
         early_stop = kc.Callback()
 

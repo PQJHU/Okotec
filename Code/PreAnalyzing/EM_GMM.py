@@ -14,7 +14,7 @@ import os
 import sklearn.preprocessing as sp
 import itertools
 import statsmodels.tsa.api as smt
-from Code.ForecastingModel.LSTM_Params import res_dir, fastec_dir
+from Code.NonLinear_ForecastModels.LSTM_Params import res_dir, fastec_dir
 
 def em_clustering_forecast():
     src = pd.read_csv('data/last_anonym_2017_vartime.csv', sep=';', index_col=0, parse_dates=True)
@@ -86,7 +86,7 @@ def em_clustering_forecast():
     np.random.seed(666)
     X_test = gmm_df_4d['load'][0:10000]
     # X_test = lstm_best_pred[0:10000]
-    cluster_num = 5
+    cluster_num = 6
     transform_flag = False
 
 

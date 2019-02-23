@@ -1,0 +1,6 @@
+"measures","results"
+"norm.by.range RMSE",0.1641
+"norm.by.mean RMSE",0.2038
+"norm.by.IQR RMSE",1.4833
+"MASE.192",0.5071
+"MAE",0.0833
