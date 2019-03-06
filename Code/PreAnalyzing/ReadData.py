@@ -1,11 +1,13 @@
 # import matplotlib as mpl
 # mpl.use('TKAgg')
+# import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import datetime
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from scipy.special import logit
 import numpy as np
+import datetime as dt
 
 """
 Read Example:
@@ -18,7 +20,7 @@ sch_g = read_transform_grouped(query_vars='schedules', grouped=True)
 
 
 
-def read_transform_grouped(query_vars=None, transform=None, grouped=True):
+def read_transform_grouped_1st(query_vars=None, transform=None, grouped=True):
     print(os.getcwd())
     ts = pd.read_csv('data/last_anonym_2017_vartime.csv', sep=';', index_col=0, parse_dates=True)
     print(ts)
@@ -66,6 +68,22 @@ def read_transform_grouped(query_vars=None, transform=None, grouped=True):
 
     else:
         raise KeyError('Querying with Wrong Keyword')
+
+def read_data_leipzig(query_var = None):
+    os.getcwd()
+    if query_var == 'cold_air':
+        cold_air_ts = pd.read_csv('data/leipzig_2017.csv', index_col=0, parse_dates=True)
+        cold_air_ts = cold_air_ts[~ (cold_air_ts.index.date == dt.date(2018, 1, 1))]
+
+        return cold_air_ts
+    elif query_var == 'production':
+        production = pd.read_csv('data/Production_2017.csv', index_col=0, parse_dates=True, decimal=',')
+        production = production[~ (production.index.date == dt.date(2018,1,1))]
+
+        return production
+    else:
+        raise KeyError('Invalid keyword')
+
 
 
 def standard_scaler(df):

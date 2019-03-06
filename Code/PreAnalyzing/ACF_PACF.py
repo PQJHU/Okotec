@@ -1,6 +1,6 @@
 import matplotlib as mlp
 mlp.use('TkAgg')
-from Code.PreAnalyzing.ReadData import read_transform_grouped, min_max_scaler
+from Code.PreAnalyzing.ReadData import read_transform_grouped_1st, min_max_scaler
 import matplotlib.pyplot as plt
 import statsmodels.tsa.api as smt
 import os
@@ -29,20 +29,20 @@ def plot_acf_full_sub(y, lags=None, name=None):
 
 
     # ======test
-    corr= acf(x=y, unbiased=False,nlags=1000, alpha=0.05)
-    plt.plot(corr[0])
-    plt.plot(corr[1])
+    # corr= acf(x=y, unbiased=False,nlags=1000, alpha=0.05)
+    # plt.plot(corr[0])
+    # plt.plot(corr[1])
 
-    lags=1000
-    smt.graphics.plot_acf(y, lags=lags, ax=acf_all, unbiased=True)
+    # lags=1000
+    smt.graphics.plot_acf(y, lags=lags, ax=acf_all, unbiased=False)
 
 
-    smt.graphics.plot_acf(y, lags=None, ax=acf_all, unbiased=True)
+    # smt.graphics.plot_acf(y, lags=None, ax=acf_all, unbiased=True)
     plt.xticks(fontsize=17)
     plt.yticks(fontsize=17)
     plt.title('')
     acf_lags = plt.subplot(2, 1, 2)
-    smt.graphics.plot_acf(y, lags=None, ax=acf_lags, unbiased=True)
+    smt.graphics.plot_acf(y, lags=None, ax=acf_lags, unbiased=False)
     plt.xlabel('Time Lag', fontsize=18)
     plt.xticks(fontsize=17)
     plt.yticks(fontsize=17)
@@ -52,8 +52,10 @@ def plot_acf_full_sub(y, lags=None, name=None):
     plt.show()
 
 
-
-load_data, scaler = read_transform_grouped(query_vars='load', transform='min_max')
+"""
+First dataset
+"""
+load_data, scaler = read_transform_grouped_1st(query_vars='load', transform='min_max')
 plot_dir = ('Output/plot/BasicTS/')
 os.makedirs(plot_dir, exist_ok=True)
 
@@ -73,3 +75,14 @@ load_diff_2 = load_diff - load_diff.shift(1)
 load_diff_2.dropna(inplace=True)
 plot_acf_full_sub(load_diff_2, lags=10, name=plot_dir + 'load_diff_2_acf_10')
 
+
+"""
+Second dataset
+"""
+from Code.PreAnalyzing.ReadData import read_data_leipzig
+leipzig_cooling_air = read_data_leipzig('cold_air')
+cooling = leipzig_cooling_air['Cold (kW)']
+air = leipzig_cooling_air['Air (kW)']
+
+plot_acf_full_sub(y=cooling, lags=1000, name=plot_dir + 'cooling_acf_1000')
+plot_acf_full_sub(y=air, lags=1000, name= plot_dir + 'air_acf_1000')
